@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="Numeral_System_Converter-task_main" target="11" />
+      <module name="Numeral_System_Converter-task_test" target="11" />
+      <module name="Problems-Area_of_a_circle_main" target="11" />
+      <module name="Problems-Area_of_a_circle_test" target="11" />
+      <module name="Problems-Celsius_to_Fahrenheit_main" target="11" />
+      <module name="Problems-Celsius_to_Fahrenheit_test" target="11" />
+      <module name="Problems-Difference_between_two_doubles_main" target="11" />
+      <module name="Problems-Difference_between_two_doubles_test" target="11" />
+      <module name="Problems-Difference_of_times_main" target="11" />
+      <module name="Problems-Difference_of_times_test" target="11" />
+      <module name="Problems-Distance_main" target="11" />
+      <module name="Problems-Distance_test" target="11" />
+      <module name="Problems-Evaluate_an_expression_main" target="11" />
+      <module name="Problems-Evaluate_an_expression_test" target="11" />
+      <module name="Problems-Exponential_expression_main" target="11" />
+      <module name="Problems-Exponential_expression_test" target="11" />
+      <module name="Problems-Find_X_main" target="11" />
+      <module name="Problems-Find_X_test" target="11" />
+      <module name="Problems-Liquid_pressure_main" target="11" />
+      <module name="Problems-Liquid_pressure_test" target="11" />
+      <module name="Problems-The_longest_ascending_sequence_main" target="11" />
+      <module name="Problems-The_longest_ascending_sequence_test" target="11" />
+      <module name="Problems-The_sum_of_elements_main" target="11" />
+      <module name="Problems-The_sum_of_elements_test" target="11" />
+      <module name="util_main" target="11" />
+      <module name="util_test" target="11" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

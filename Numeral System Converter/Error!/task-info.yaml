@@ -1,0 +1,338 @@
+type: edu
+custom_name: stage6
+files:
+- name: test/ConverterTest.java
+  visible: false
+  text: |
+    import converter.Main;
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+    import org.hyperskill.hstest.testcase.TestCase;
+
+    import java.util.List;
+
+    class Clue {
+        final String input;
+        String answer;
+        final boolean provideAnswer;
+
+        Clue(final String input, final String answer, final boolean provideAnswer) {
+            this.input = input;
+            this.answer = answer;
+            this.provideAnswer = provideAnswer;
+        }
+
+        Clue(final String input, final String answer) {
+            this(input, answer, false);
+        }
+
+        Clue(final String input) {
+            this(input, null, false);
+        }
+    }
+
+
+    public class ConverterTest extends StageTest<Clue> {
+
+        public ConverterTest() {
+            super(Main.class);
+        }
+
+        static TestCase<Clue> testToAnswer(final String input, final String answer, final boolean provideAnswer) {
+            return new TestCase<Clue>()
+                .setAttach(new Clue(input, answer, provideAnswer))
+                .setInput(input);
+        }
+
+        @Override
+        public List<TestCase<Clue>> generate() {
+            return List.of(
+                /* Tests with a hint: */
+                testToAnswer("a b\n\n\n", null, true),
+                testToAnswer("11\nabc\n\n", null, true),
+                testToAnswer("11\n1\ndas\n", null, true),
+                testToAnswer("0\n1\ndas\n", null, true),
+                testToAnswer("37\n1\ndas\n", null, true),
+                testToAnswer("36\n1\n0\n", null, true),
+                testToAnswer("36\n1\n37\n", null, true),
+
+                /* Tests without a hint: */
+                testToAnswer("c\n\n\n", null, false),
+                testToAnswer("12\nbc\n\n", null, false),
+                testToAnswer("12\n1\nhf\n", null, false),
+                testToAnswer("0\n2\nhf\n", null, false),
+                testToAnswer("37\n2\nhf\n", null, false),
+                testToAnswer("14\n2\n-1\n", null, false),
+                testToAnswer("14\n2\n38\n", null, false),
+
+                /* Tests from previous stage (with a hint): */
+                testToAnswer("10\n0.234\n7", "0.14315", true),
+                testToAnswer("10\n10.234\n7", "13.14315", true),
+                testToAnswer("6\n2.555\n1", "11", true),
+                testToAnswer("35\naf.xy\n17", "148.g88a8", true),
+                testToAnswer("10\n11\n2", "1011", true),
+                testToAnswer("16\naaaaa.0\n24", "22df2.00000", true),
+                testToAnswer("16\n0.cdefb\n24", "0.j78da", true),
+                testToAnswer("16\naaaaa.cdefb\n24", "22df2.j78da", true),
+
+                /* Tests from previous stage (without a hint): */
+                testToAnswer("10\n0.2340\n7", "0.14315", false),
+                testToAnswer("10\n10.2340\n7", "13.14315", false),
+                testToAnswer("6\n2.5550\n1", "11", false),
+                testToAnswer("35\naf.xy0\n17", "148.g88a8", false),
+                testToAnswer("10\n12\n2", "1100", false),
+                testToAnswer("16\naaaaa.00\n24", "22df2.00000", false),
+                testToAnswer("16\n0.cdefb0\n24", "0.j78da", false),
+                testToAnswer("16\naaaaa.cdefb0\n24", "22df2.j78da", false),
+
+                /* Tests from previous stage (with a hint): */
+                testToAnswer("10\n11\n2\n", "1011", true),
+                testToAnswer("1\n11111\n10\n", "5", true),
+                testToAnswer("10\n1000\n36\n", "rs", true),
+                testToAnswer("21\n4242\n6\n", "451552", true),
+                testToAnswer("7\n12\n11\n", "9", true),
+                testToAnswer("5\n300\n10\n", "75", true),
+                testToAnswer("1\n11111\n5\n", "10", true),
+                testToAnswer("10\n4\n1\n", "1111", true),
+
+                /* Tests from previous stage (without a hint): */
+                testToAnswer("10\n12\n2\n", "1100", false),
+                testToAnswer("1\n1111111\n10\n", "7", false),
+                testToAnswer("10\n1001\n36\n", "rt", false),
+                testToAnswer("21\n4243\n6\n", "451553", false),
+                testToAnswer("7\n13\n11\n", "a", false),
+                testToAnswer("5\n301\n10\n", "76", false),
+                testToAnswer("1\n111111\n5\n", "11", false),
+                testToAnswer("10\n5\n1\n", "11111", false)
+            );
+        }
+
+        @Override
+        public CheckResult check(String reply, Clue clue) {
+            final String[] lines = reply
+                .lines()
+                .filter(line -> !line.isEmpty())
+                .toArray(String[]::new);
+
+            if (lines.length == 0) {
+                return new CheckResult(
+                    false,
+                    "Your program doesn't print any line."
+                );
+            }
+
+            String answer = lines[lines.length - 1];
+
+            if (clue.answer == null) {
+                if (answer.toLowerCase().contains("error")) {
+                    return new CheckResult(true);
+                } else if (clue.provideAnswer) {
+                    return new CheckResult(
+                        false,
+                        "Your program doesn't say about an error.\n" +
+                            "This is a sample test so we give you a hint.\n" +
+                            "Input: " + clue.input + "\n" +
+                            "Your answer: " + answer
+                    );
+                } else {
+                    return new CheckResult(
+                        false,
+                        "Your program doesn't say about an error."
+                    );
+                }
+            }
+
+            answer = answer.replaceAll("[^\\p{Graph}]", "");
+            clue.answer = clue.answer.replaceAll("[^\\p{Graph}]", "");
+
+            answer = removeEndZeros(answer);
+            clue.answer = removeEndZeros(clue.answer);
+
+            if (!answer.equals(clue.answer)) {
+                if (clue.provideAnswer) {
+                    return new CheckResult(
+                        false,
+                        "Your program gives a wrong answer when there is no error in the input.\n" +
+                            "This is a sample test so we give you a hint.\n" +
+                            "Input: " + clue.input + "\n" +
+                            "Your answer: " + answer + "\n" +
+                            "Correct answer: " + clue.answer
+                    );
+                } else {
+                    return new CheckResult(
+                        false,
+                        "Your program gives a wrong answer when there is no error in the input."
+                    );
+                }
+            }
+
+            return new CheckResult(true);
+        }
+
+        private String removeEndZeros(String number) {
+            if (!number.contains(".")) {
+                return number;
+            }
+            while (number.endsWith("0")) {
+                number = number.substring(0, number.length() - 1);
+            }
+            if (number.endsWith(".")) {
+                number = number.substring(0, number.length() - 1);
+            }
+            return number;
+        }
+    }
+  learner_created: false
+- name: src/converter/Main.java
+  visible: true
+  text: |+
+    package converter;
+
+    import java.io.BufferedReader;
+    import java.io.IOException;
+    import java.io.InputStreamReader;
+
+    interface ConversionInDecimal {
+        double convertInDecimal (String number, int radix);
+    }
+
+    interface ConversionInGivenRadix {
+        String convertInGivenRadix(int number, int radix);
+    }
+
+    class WholeNumber implements ConversionInDecimal, ConversionInGivenRadix{
+
+        @Override
+        public double convertInDecimal(String number, int radix) {
+            return Integer.parseInt(number, radix);
+        }
+
+        @Override
+        public String convertInGivenRadix(int number, int radix) {
+            return Integer.toString((int) number, radix);
+        }
+    }
+
+    class FractionalNumber implements ConversionInDecimal, ConversionInGivenRadix {
+
+        String alphabet = "abcdefghijklmnopqrstuvwxyz";
+
+        @Override
+        public double convertInDecimal(String number, int radix) {
+            double decimalValue = 0.0;
+            int power = 1;
+            for (char each: number.toCharArray()) {
+                if (alphabet.contains(String.valueOf(each).toLowerCase())) {
+                    decimalValue += (alphabet.indexOf(each) + 10) / Math.pow(radix, power);
+                } else {
+                    decimalValue += Double.parseDouble(String.valueOf(each)) / Math.pow(radix, power);
+                }
+                power++;
+            }
+            return decimalValue;
+        }
+
+        @Override
+        public String convertInGivenRadix(int number, int radix) {
+            int sizeOfNumber = String.valueOf(number).length();
+            //StringBuilder numberString = new StringBuilder();
+            double numberFaction = number / Math.pow(10, sizeOfNumber);
+            StringBuilder numberString = new StringBuilder();
+
+            for (int i = 1; i <= 5; i++) {
+                int whole = (int) (numberFaction * radix);
+                //System.out.print(whole);
+                if (whole < 10) {
+                    numberString.append(whole);
+                } else {
+                    numberString.append(alphabet.charAt(whole - 10));
+                }
+                numberFaction = numberFaction * radix - whole;
+
+            }
+            return "." + numberString;
+
+        }
+    }
+    public class Main {
+
+        public static void main(String[] args) throws IOException {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            int sourceRadix = Integer.parseInt(reader.readLine());
+            String sourceNumber = reader.readLine();
+            int sourceNumberInteger = 0;
+            int radix = Integer.parseInt(reader.readLine());
+            String[] splitNumber = sourceNumber.split("\\.");
+
+            WholeNumber wholeNumber = new WholeNumber();
+            FractionalNumber fractionalNumber = new FractionalNumber();
+
+           if (radix == 1) {
+               int wholePart = (int) wholeNumber.convertInDecimal(splitNumber[0], sourceRadix);
+               StringBuilder wholePartToPrint = new StringBuilder();
+               while (wholePart > 0) {
+                   wholePartToPrint.append(1);
+                   wholePart--;
+               }
+               if (splitNumber.length == 2) {
+                   int fractionalPart = (int) fractionalNumber.convertInDecimal(splitNumber[1], sourceRadix);
+
+                   wholePartToPrint.append(".");
+                   int i = 0;
+                   while (i < 5 && fractionalPart > 0) {
+                       wholePartToPrint.append(1);
+                       i++;
+                       fractionalPart--;
+                   }
+               }
+               System.out.print(wholePartToPrint);
+
+           } else {
+               switch (sourceRadix) {
+                   case 1:
+                       int wholeLength = String.valueOf(splitNumber[0]).length();
+                       int number = 0;
+                       while(wholeLength > 0) {
+                           number++;
+                           wholeLength--;
+                       }
+                       if (radix == 10) {
+                           System.out.print(number);
+                       } else {
+                           System.out.print(Integer.toString(number, radix));
+                       }
+                       break;
+                   case 10:
+                       if (splitNumber.length == 1) {
+                           System.out.print(wholeNumber.convertInGivenRadix(Integer.parseInt(splitNumber[0]), radix));
+                       } else {
+                           System.out.print(wholeNumber.convertInGivenRadix(Integer.parseInt(splitNumber[0]), radix) +
+                                   fractionalNumber.convertInGivenRadix(Integer.parseInt(splitNumber[1]), radix));
+                       }
+
+                       break;
+                   default:
+                       int wholePart = (int) wholeNumber.convertInDecimal(splitNumber[0], sourceRadix);
+                       String wholePartRadix = wholeNumber.convertInGivenRadix(wholePart, radix);
+                       String fractionalPartRadix;
+                       if (splitNumber.length == 1) {
+                           fractionalPartRadix = "";
+                       }else {
+                       double fractionalPart =  fractionalNumber.convertInDecimal(splitNumber[1], sourceRadix);
+                       int fractionalPartInt = (int) Math.round(fractionalPart * 10000000);
+                       fractionalPartRadix = fractionalNumber.convertInGivenRadix(fractionalPartInt, radix);}
+                       System.out.print(wholePartRadix + fractionalPartRadix);
+
+               }
+           }
+
+
+        }
+
+            }
+
+
+  learner_created: true
+feedback_link: https://hyperskill.org/projects/41/stages/219/implement
+status: Solved
+record: -1
